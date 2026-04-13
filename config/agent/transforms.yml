@@ -14,13 +14,16 @@
 
 # Relevant Transforms
 # ------------------------------------------------------------------------------
+# Dedupe - Deduplicate events to reduce data volume by eliminating identical events:
+# https://vector.dev/docs/reference/configuration/transforms/dedupe/
+# 
 # Filter - Filter events based on a set of conditions:
 # https://vector.dev/docs/reference/configuration/transforms/filter/
 #
 # Remap - Modify observability data as it passes through the topology using Vector Remap Language (VRL):
 # https://vector.dev/docs/reference/configuration/transforms/remap/
 #
-# Route - Split a stram of events into multiple sub-streams based on user-supplied conditions:
+# Route - Split a stream of events into multiple sub-streams based on user-supplied conditions:
 # https://vector.dev/docs/reference/configuration/transforms/route/
 #
 # Throttle - Rate limit logs passing through a topology:
