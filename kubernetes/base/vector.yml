@@ -28,7 +28,7 @@ spec:
   # https://github.com/vectordotdev/helm-charts/blob/develop/charts/vector/values.yaml
   values:
     role: "Agent"
-    dataDir: /var/local/lib/vector
+    dataDir: /vector-data-dir
     existingConfigMaps:
       - vector-agent-config
 
