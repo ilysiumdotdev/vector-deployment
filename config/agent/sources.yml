@@ -12,6 +12,8 @@
 # Chat: https://chat.vector.dev
 # ------------------------------------------------------------------------------
 
+data_dir: /vector-data-dir
+
 sources:
   
   # Reference: https://vector.dev/docs/reference/configuration/sources/kubernetes_logs/
