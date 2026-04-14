@@ -20,6 +20,7 @@ sinks:
     api_version: "v8"
     inputs:
       - enrich_kubernetes
+      - hubble_flow_logs
     endpoints:
       - https://elasticsearch-es-http.elastic-stack.svc:9200
     tls:

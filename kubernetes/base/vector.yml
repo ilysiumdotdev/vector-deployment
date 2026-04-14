@@ -47,9 +47,18 @@ spec:
         configMap:
           name: elastic-ca
 
+      - name: hubble-logs
+        hostPath:
+          path: /var/run/cilium/hubble
+          type: DirectoryOrCreate
+
     extraVolumeMounts:
       - name: elastic-ca
         mountPath: /etc/ssl/elastic
+        readOnly: true
+
+      - name: hubble-logs
+        mountPath: /var/run/cilium/hubble
         readOnly: true
 
     env:

@@ -15,10 +15,16 @@
 data_dir: /vector-data-dir
 
 sources:
-  
   # Reference: https://vector.dev/docs/reference/configuration/sources/kubernetes_logs/
   # -----------------------------------------------------------------------------------
   kubernetes_logs:
     type: kubernetes_logs
     auto_partial_merge: true
     self_node_name: "$${VECTOR_SELF_NODE_NAME}"
+
+  hubble_flow_logs:
+    type: file
+    include:
+      - /var/run/cilium/hubble/*.log*
+    read_from: beginning
+    ignore_older_secs: 600
