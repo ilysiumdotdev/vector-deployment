@@ -60,7 +60,3 @@ spec:
           secretKeyRef:
             name: vector-elastic-credentials
             key: password
-      - name: VECTOR_SELF_NODE_NAME
-        valueFrom:
-          fieldRef:
-            fieldPath: spec.nodeName
