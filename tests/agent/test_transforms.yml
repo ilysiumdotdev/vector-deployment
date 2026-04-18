@@ -1,0 +1,252 @@
+tests:
+  - name: test_tag_hubble_flow_logs
+    inputs:
+      - insert_at: tag_hubble_flow_logs
+        type: log
+        log_fields:
+          message: "{}"
+    outputs:
+      - extract_from: tag_hubble_flow_logs
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.@source, "hubble_flow")
+              assert_eq!(.@dataset, "hubble-flow")
+              assert_eq!(.@namespace, "platform")
+
+  - name: test_tag_kubernetes_logs
+    inputs:
+      - insert_at: tag_kubernetes_logs
+        type: log
+        log_fields:
+          kubernetes:
+            container_name: postgres
+            pod_namespace: payments-service
+          message: "{}"
+    outputs:
+      - extract_from: tag_kubernetes_logs
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.@source, "kubernetes")
+              assert_eq!(.@dataset, "postgres-app")
+              assert_eq!(.@namespace, "payments-service")
+
+  - name: test_tag_kubernetes_audit_logs
+    inputs:
+      - insert_at: tag_kubernetes_audit_logs
+        type: log
+        log_fields:
+          message: "{}"
+    outputs:
+      - extract_from: tag_kubernetes_audit_logs
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.@source, "kubernetes_audit")
+              assert_eq!(.@dataset, "kubernetes-audit")
+              assert_eq!(.@namespace, "platform")
+
+  - name: test_tag_vault_audit_logs
+    inputs:
+      - insert_at: tag_vault_audit_logs
+        type: log
+        log_fields:
+          message: "{}"
+    outputs:
+      - extract_from: tag_vault_audit_logs
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.@source, "vault_audit")
+              assert_eq!(.@dataset, "vault-audit")
+              assert_eq!(.@namespace, "platform")
+
+  - name: test_parse_json_success
+    inputs:
+      - insert_at: parse_json
+        type: log
+        log_fields:
+          message: '{ "user": "Retr0", "city": "Oakland", "affiliation": "DedSec" }'
+    outputs:
+      - extract_from: parse_json
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.user, "Retr0")
+              assert_eq!(.city, "Oakland")
+              assert_eq!(.affiliation, "DedSec")
+
+              assert!(exists(.message) == false)
+
+  - name: test_parse_json_error
+    inputs:
+      - insert_at: parse_json
+        type: log
+        log_fields:
+          message: "[INFO] :: file.log - Non-JSON message"
+    outputs:
+      - extract_from: parse_json
+        conditions:
+          - type: vrl
+            source: |
+              expected_message = .message
+
+              assert!(exists(.message) == true)
+              assert_eq!(.message, expected_message)
+
+  - name: test_remap_hubble_flow_logs
+    inputs:
+      - insert_at: remap_hubble_flow_logs
+        type: log
+        log_fields:
+          node_name: node-01
+          flow:
+            emitter:
+              name: Hubble
+              version: test-version
+            ethernet:
+              source: aa:aa:aa:aa:aa:aa
+              destination: bb:bb:bb:bb:bb:bb
+            IP:
+              source: "1.1.1.1"
+              destination: "8.8.8.8"
+              ipVersion: IPv4
+            l4:
+              TCP:
+                source_port: 47100
+                destination_port: 53
+            source:
+              ID: 21
+              identity: 12345
+              cluster_name: test
+              namespace: test-namespace-alpha
+              labels: []
+              pod_name: test-pod-1
+              workloads: []
+            destination:
+              ID: 9001
+              identity: 22222
+              cluster_name: test
+              namespace: test-namespace-delta
+              labels: []
+              pod_name: test-pod-2
+              workloads: []
+            Type: L3_L4
+            node_name: node-01
+            event_type:
+              type: "4"
+            interface:
+              index: 20
+              name: test
+            Summary: UDP
+    outputs:
+      - extract_from: remap_hubble_flow_logs
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.destination.id, 9001)
+              assert_eq!(.destination.ip, "8.8.8.8")
+              assert_eq!(.destination.pod, "test-pod-2")
+              assert_eq!(.destination.port, 53)
+
+              assert_eq!(.event_type, "4")
+              assert_eq!(.node, "node-01")
+              assert_eq!(.protocol, "UDP")
+
+              assert_eq!(.source.id, 21)
+              assert_eq!(.source.ip, "1.1.1.1")
+              assert_eq!(.source.pod, "test-pod-1")
+              assert_eq!(.source.port, 47100)
+
+              assert_eq!(.type, "L3_L4")
+
+              assert!(exists(.flow) == false)
+              assert!(exists(.emitter) == false)
+              assert!(exists(.ethernet) == false)
+              assert!(exists(.interface) == false)
+              assert!(exists(.l4) == false)
+
+  - name: test_remap_kubernetes_logs
+    inputs:
+      - insert_at: remap_kubernetes_logs
+        type: log
+        log_fields:
+          file: /var/log/test-file.log
+          kubernetes:
+            container_name: test
+            pod_namespace: test-namespace
+            pod_node_name: test-node
+            pod_name: test-pod
+    outputs:
+      - extract_from: remap_kubernetes_logs
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.kubernetes.container, "test")
+              assert_eq!(.kubernetes.namespace, "test-namespace")
+              assert_eq!(.kubernetes.node, "test-node")
+              assert_eq!(.kubernetes.pod, "test-pod")
+
+              assert!(exists(.kubernetes.container_name) == false)
+              assert!(exists(.kubernetes.pod_namespace) == false)
+              assert!(exists(.kubernetes.pod_node_name) == false)
+              assert!(exists(.kubernetes.pod_name) == false)
+              assert!(exists(.source_type) == false)
+
+  - name: test_remap_kubernetes_audit_logs
+    inputs:
+      - insert_at: remap_kubernetes_audit_logs
+        type: log
+        log_fields:
+          apiVersion: audit.k8s.io/v1
+          auditID: 11111111-1111-1111-1111-111111111111
+          impersonatedUser:
+            username: test-user
+          objectRef:
+            name: test
+          requestURI: /apis/test/v1beta3
+          responseStatus:
+            code: 200
+          sourceIPs: ["1.1.1.1"]
+          userAgent: test-client
+    outputs:
+      - extract_from: remap_kubernetes_audit_logs
+        conditions:
+          - type: vrl
+            source: |
+              expected_impersonated_user = {
+                "username": "test-user"
+              }
+              expected_object_ref = {
+                "name": "test"
+              }
+              expected_response_status = {
+                "code": 200
+              }
+
+              assert_eq!(.api_version, "audit.k8s.io/v1")
+              assert_eq!(.audit_id, "11111111-1111-1111-1111-111111111111")
+              assert_eq!(.impersonated_user, expected_impersonated_user)
+              assert_eq!(.object_ref, expected_object_ref)
+              assert_eq!(.request_uri, "/apis/test/v1beta3")
+              assert_eq!(.response_status, expected_response_status)
+              assert_eq!(.source_ips, ["1.1.1.1"])
+              assert_eq!(.user_agent, "test-client")
+
+              assert!(exists(.requestReceivedTimestamp) == false)
+              assert!(exists(.stageTimestamp) == false)
+
+  - name: test_remap_vault_audit_logs
+    inputs:
+      - insert_at: remap_vault_audit_logs
+        type: log
+        log_fields:
+          request:
+            namespace: test
+    outputs:
+      - extract_from: remap_vault_audit_logs
+        conditions:
+          - type: vrl
+            source: |
+              assert!(exists(.request.namespace) == false)

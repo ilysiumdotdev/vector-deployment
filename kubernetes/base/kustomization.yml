@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - elastic-ca.yml
   - secret-store.yml
-  # - vector.yml
+  - vector.yml
 configMapGenerator:
   - name: vector-agent-config
     files:

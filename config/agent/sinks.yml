@@ -19,8 +19,10 @@ sinks:
     type: elasticsearch
     api_version: "v8"
     inputs:
-      - enrich_kubernetes
-      - hubble_flow_logs
+      # - remap_hubble_flow_logs
+      - remap_kubernetes_logs
+      # - remap_kubernetes_audit_logs
+      - remap_vault_audit_logs
     endpoints:
       - https://elasticsearch-es-http.elastic-stack.svc:9200
     tls:
@@ -32,8 +34,8 @@ sinks:
     mode: data_stream
     data_stream:
       type: logs
-      dataset: kubernetes
-      namespace: ${ENVIRONMENT}
+      dataset: "{{ .@dataset }}"
+      namespace: "{{ .@namespace }}"
     bulk:
       action: create
 

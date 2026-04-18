@@ -12,24 +12,47 @@
 # Chat: https://chat.vector.dev
 # ------------------------------------------------------------------------------
 
-# Relevant Sources 
+# Relevant Sources
 # ------------------------------------------------------------------------------
 # File: https://vector.dev/docs/reference/configuration/sources/file/
-# 
+#
 # Kubernetes: https://vector.dev/docs/reference/configuration/sources/kubernetes_logs/
 # ------------------------------------------------------------------------------
 
 data_dir: /vector-data-dir
 
 sources:
+  hubble_flow_logs:
+    type: file
+    include:
+      - /var/run/cilium/hubble/*.log
+    read_from: beginning
+    max_line_bytes: 102400
+    max_read_bytes: 2048
+    ignore_older_secs: 600
+
+
   kubernetes_logs:
     type: kubernetes_logs
     auto_partial_merge: true
     self_node_name: "$${VECTOR_SELF_NODE_NAME}"
 
-  hubble_flow_logs:
+
+  kubernetes_audit_logs:
     type: file
     include:
-      - /var/run/cilium/hubble/*.log*
+      - /var/log/audit/kube/*.log
     read_from: beginning
+    max_line_bytes: 102400
+    max_read_bytes: 2048
+    ignore_older_secs: 600
+  
+
+  vault_audit_logs:
+    type: file
+    include:
+      - var/log/audit/vault/*.log
+    read_from: beginning
+    max_line_bytes: 102400
+    max_read_bytes: 2048
     ignore_older_secs: 600
