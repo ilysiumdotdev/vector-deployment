@@ -10,13 +10,18 @@ tests:
         conditions:
           - type: vrl
             source: |
-              assert_eq!(.@source, "hubble")
+              assert_eq!(.@source, "hubble_flow")
+              assert_eq!(.@dataset, "hubble-flow")
+              assert_eq!(.@namespace, "platform")
 
   - name: test_tag_kubernetes_logs
     inputs:
       - insert_at: tag_kubernetes_logs
         type: log
         log_fields:
+          kubernetes:
+            container_name: postgres
+            pod_namespace: payments-service
           message: "{}"
     outputs:
       - extract_from: tag_kubernetes_logs
@@ -24,6 +29,8 @@ tests:
           - type: vrl
             source: |
               assert_eq!(.@source, "kubernetes")
+              assert_eq!(.@dataset, "postgres-app")
+              assert_eq!(.@namespace, "payments-service")
 
   - name: test_tag_kubernetes_audit_logs
     inputs:
@@ -37,6 +44,8 @@ tests:
           - type: vrl
             source: |
               assert_eq!(.@source, "kubernetes_audit")
+              assert_eq!(.@dataset, "kubernetes-audit")
+              assert_eq!(.@namespace, "platform")
 
   - name: test_tag_vault_audit_logs
     inputs:
@@ -49,22 +58,42 @@ tests:
         conditions:
           - type: vrl
             source: |
-              assert_eq!(.@source, "vault")
+              assert_eq!(.@source, "vault_audit")
+              assert_eq!(.@dataset, "vault-audit")
+              assert_eq!(.@namespace, "platform")
 
-  - name: test_parse_json_global
+  - name: test_parse_json_success
     inputs:
-      - insert_at: parse_json_global
+      - insert_at: parse_json
         type: log
         log_fields:
           message: '{ "user": "Retr0", "city": "Oakland", "affiliation": "DedSec" }'
     outputs:
-      - extract_from: parse_json_global
+      - extract_from: parse_json
         conditions:
           - type: vrl
             source: |
               assert_eq!(.user, "Retr0")
               assert_eq!(.city, "Oakland")
               assert_eq!(.affiliation, "DedSec")
+
+              assert!(exists(.message) == false)
+
+  - name: test_parse_json_error
+    inputs:
+      - insert_at: parse_json
+        type: log
+        log_fields:
+          message: "[INFO] :: file.log - Non-JSON message"
+    outputs:
+      - extract_from: parse_json
+        conditions:
+          - type: vrl
+            source: |
+              expected_message = .message
+
+              assert!(exists(.message) == true)
+              assert_eq!(.message, expected_message)
 
   - name: test_remap_hubble_flow_logs
     inputs:
@@ -207,7 +236,7 @@ tests:
 
               assert!(exists(.requestReceivedTimestamp) == false)
               assert!(exists(.stageTimestamp) == false)
-  
+
   - name: test_remap_vault_audit_logs
     inputs:
       - insert_at: remap_vault_audit_logs
@@ -221,4 +250,3 @@ tests:
           - type: vrl
             source: |
               assert!(exists(.request.namespace) == false)
-

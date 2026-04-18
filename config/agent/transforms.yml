@@ -31,13 +31,14 @@
 # ------------------------------------------------------------------------------
 
 transforms:
-  # Tag log streams with source
   tag_hubble_flow_logs:
     type: remap
     inputs:
       - hubble_flow_logs
     source: |
-      .@source = "hubble"
+      .@source = "hubble_flow"
+      .@dataset = "hubble-flow"
+      .@namespace = "platform"
 
   tag_kubernetes_logs:
     type: remap
@@ -45,6 +46,12 @@ transforms:
       - kubernetes_logs
     source: |
       .@source = "kubernetes"
+      .@dataset, err = .kubernetes.container_name + "-app"
+      .@namespace = .kubernetes.pod_namespace
+
+      if err == null {
+        return null
+      }
 
   tag_kubernetes_audit_logs:
     type: remap
@@ -52,16 +59,19 @@ transforms:
       - kubernetes_audit_logs
     source: |
       .@source = "kubernetes_audit"
+      .@dataset = "kubernetes-audit"
+      .@namespace = "platform"
 
   tag_vault_audit_logs:
     type: remap
     inputs:
       - vault_audit_logs
     source: |
-      .@source = "vault"
+      .@source = "vault_audit"
+      .@dataset = "vault-audit"
+      .@namespace = "platform"
 
-  # Parse JSON logs
-  parse_json_global:
+  parse_json:
     type: remap
     inputs:
       - tag_hubble_flow_logs
@@ -75,16 +85,15 @@ transforms:
           del(.message)
       }
 
-  # Reroute log streams by source
   route_by_source:
     type: route
     inputs:
-      - parse_json_global
+      - parse_json
     route:
-      hubble: .@source == "hubble"
+      hubble: .@source == "hubble_flow"
       kubernetes: .@source == "kubernetes"
       kubernetes_audit: .@source == "kubernetes_audit"
-      vault: .@source == "vault"
+      vault: .@source == "vault_audit"
 
   remap_hubble_flow_logs:
     type: remap
@@ -92,7 +101,7 @@ transforms:
       - route_by_source.hubble
     source: |
       flow = del(.flow)
-      
+
       . = merge!(., flow)
 
       .destination.id = del(.destination.ID)
