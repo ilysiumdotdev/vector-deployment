@@ -10,7 +10,7 @@ jobs:
     test-agent:
         runs-on: ubuntu-latest
         container:
-            image: timberio/vector:nightly-distroless-libc
+            image: timberio/vector:nightly-alpine
         steps:
             - name: Checkout Code
               uses: actions/checkout@v4
