@@ -8,7 +8,7 @@ Vector agent & aggregator configurations for platform observability pipelines.
 
 **Vector** is a lightweight tool by for building high performance observability pipelines for logs and metrics. Built by DataDog, it has many advanced features that make it a top tier choice for log aggregation:
 
-- **Performance** — Vector is written in Rust. which gives it the speed and memory efficiency to handle high-volume event streams.
+- **Performance** — Vector is written in Rust, which gives it the speed and memory efficiency to handle high-volume event streams.
 
 - **Programmable Transforms** — **Vector Remap Language (VRL**) can be used to handle complex customizations of events, such as renaming fields, perfoming calculations, and conditional routing.
 

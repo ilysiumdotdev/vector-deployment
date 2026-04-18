@@ -46,7 +46,7 @@ transforms:
       - kubernetes_logs
     source: |
       .@source = "kubernetes"
-      .@dataset, err = .kubernetes.container_name + "-app"
+      .@dataset, err = "kubernetes-" + .kubernetes.container_name
       .@namespace = .kubernetes.pod_namespace
 
       if err == null {

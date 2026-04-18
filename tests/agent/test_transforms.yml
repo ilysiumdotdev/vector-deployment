@@ -29,7 +29,7 @@ tests:
           - type: vrl
             source: |
               assert_eq!(.@source, "kubernetes")
-              assert_eq!(.@dataset, "postgres-app")
+              assert_eq!(.@dataset, "kubernetes-postgres")
               assert_eq!(.@namespace, "payments-service")
 
   - name: test_tag_kubernetes_audit_logs
