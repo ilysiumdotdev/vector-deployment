@@ -10,9 +10,15 @@ tests:
         conditions:
           - type: vrl
             source: |
+              # Assert that the data stream for the logs follows 'logs-{dataset}-{namespace}'
+              expected_destination = "logs-hubble.flow-platform"
+              destination = "logs-" + string!(.@dataset) + "-" + string!(.@namespace)
+              
               assert_eq!(.@source, "hubble_flow")
-              assert_eq!(.@dataset, "hubble-flow")
+              assert_eq!(.@dataset, "hubble.flow")
               assert_eq!(.@namespace, "platform")
+
+              assert_eq!(destination, expected_destination)
 
   - name: test_tag_kubernetes_logs
     inputs:
@@ -28,9 +34,15 @@ tests:
         conditions:
           - type: vrl
             source: |
+              # Assert that the data stream for the logs follows 'logs-{dataset}-{namespace}'
+              expected_destination = "logs-kubernetes.postgres-payments-service"
+              destination = "logs-" + string!(.@dataset) + "-" + string!(.@namespace)
+
               assert_eq!(.@source, "kubernetes")
-              assert_eq!(.@dataset, "kubernetes-postgres")
+              assert_eq!(.@dataset, "kubernetes.postgres")
               assert_eq!(.@namespace, "payments-service")
+
+              assert_eq!(destination, expected_destination)
 
   - name: test_tag_kubernetes_audit_logs
     inputs:
@@ -43,9 +55,15 @@ tests:
         conditions:
           - type: vrl
             source: |
+              # Assert that the data stream for the logs follows 'logs-{dataset}-{namespace}'
+              expected_destination = "logs-kubernetes.audit-platform"
+              destination = "logs-" + string!(.@dataset) + "-" + string!(.@namespace)
+
               assert_eq!(.@source, "kubernetes_audit")
-              assert_eq!(.@dataset, "kubernetes-audit")
+              assert_eq!(.@dataset, "kubernetes.audit")
               assert_eq!(.@namespace, "platform")
+
+              assert_eq!(destination, expected_destination)
 
   - name: test_tag_vault_audit_logs
     inputs:
@@ -58,9 +76,15 @@ tests:
         conditions:
           - type: vrl
             source: |
+              # Assert that the data stream for the logs follows 'logs-{dataset}-{namespace}'
+              expected_destination = "logs-vault.audit-platform"
+              destination = "logs-" + string!(.@dataset) + "-" + string!(.@namespace)
+              
               assert_eq!(.@source, "vault_audit")
-              assert_eq!(.@dataset, "vault-audit")
+              assert_eq!(.@dataset, "vault.audit")
               assert_eq!(.@namespace, "platform")
+
+              assert_eq!(destination, expected_destination)
 
   - name: test_parse_json_success
     inputs:

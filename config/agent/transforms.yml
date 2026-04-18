@@ -37,7 +37,7 @@ transforms:
       - hubble_flow_logs
     source: |
       .@source = "hubble_flow"
-      .@dataset = "hubble-flow"
+      .@dataset = "hubble.flow"
       .@namespace = "platform"
 
   tag_kubernetes_logs:
@@ -46,7 +46,7 @@ transforms:
       - kubernetes_logs
     source: |
       .@source = "kubernetes"
-      .@dataset = "kubernetes-" + string!(.kubernetes.container_name)
+      .@dataset = "kubernetes." + string!(.kubernetes.container_name)
       .@namespace = .kubernetes.pod_namespace
 
 
@@ -56,7 +56,7 @@ transforms:
       - kubernetes_audit_logs
     source: |
       .@source = "kubernetes_audit"
-      .@dataset = "kubernetes-audit"
+      .@dataset = "kubernetes.audit"
       .@namespace = "platform"
 
   tag_vault_audit_logs:
@@ -65,7 +65,7 @@ transforms:
       - vault_audit_logs
     source: |
       .@source = "vault_audit"
-      .@dataset = "vault-audit"
+      .@dataset = "vault.audit"
       .@namespace = "platform"
 
   parse_json:
@@ -87,10 +87,10 @@ transforms:
     inputs:
       - parse_json
     route:
-      hubble: .@source == "hubble_flow"
+      hubble: .@source == "hubble.flow"
       kubernetes: .@source == "kubernetes"
-      kubernetes_audit: .@source == "kubernetes_audit"
-      vault: .@source == "vault_audit"
+      kubernetes_audit: .@source == "kubernetes.audit"
+      vault: .@source == "vault.audit"
 
   remap_hubble_flow_logs:
     type: remap
