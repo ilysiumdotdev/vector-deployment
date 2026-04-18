@@ -16,7 +16,7 @@
 # ------------------------------------------------------------------------------
 # Dedupe - Deduplicate events to reduce data volume by eliminating identical events:
 # https://vector.dev/docs/reference/configuration/transforms/dedupe/
-# 
+#
 # Filter - Filter events based on a set of conditions:
 # https://vector.dev/docs/reference/configuration/transforms/filter/
 #
@@ -31,26 +31,123 @@
 # ------------------------------------------------------------------------------
 
 transforms:
-  enrich_kubernetes:
+  # Tag log streams with source
+  tag_hubble_flow_logs:
+    type: remap
+    inputs:
+      - hubble_flow_logs
+    source: |
+      .@source = "hubble"
+
+  tag_kubernetes_logs:
     type: remap
     inputs:
       - kubernetes_logs
     source: |
-      .namespace = .kubernetes.pod_namespace
-      .pod = .kubernetes.pod_name
-      .container = .kubernetes.container_name
-      .node = .kubernetes.pod_node_name
-      
-      if exists(.kubernetes.pod_labels) {
-          # Use a new object to store sanitized labels
-          .labels = {}
-          
-          # Iterate through labels, replacing dots with underscores
-          for_each(object!(.kubernetes.pod_labels)) -> |key, value| {
-              new_key = replace(key, ".", "_")
-              .labels."{{ new_key }}" = value
-          }
-          
-          # Remove the original dotted labels
-          del(.kubernetes.pod_labels)
+      .@source = "kubernetes"
+
+  tag_kubernetes_audit_logs:
+    type: remap
+    inputs:
+      - kubernetes_audit_logs
+    source: |
+      .@source = "kubernetes_audit"
+
+  tag_vault_audit_logs:
+    type: remap
+    inputs:
+      - vault_audit_logs
+    source: |
+      .@source = "vault"
+
+  # Parse JSON logs
+  parse_json_global:
+    type: remap
+    inputs:
+      - tag_hubble_flow_logs
+      - tag_kubernetes_logs
+      - tag_kubernetes_audit_logs
+      - tag_vault_audit_logs
+    source: |
+      parsed, err = parse_json(.message)
+      if err == null {
+          . = merge!(., parsed)
+          del(.message)
       }
+
+  # Reroute log streams by source
+  route_by_source:
+    type: route
+    inputs:
+      - parse_json_global
+    route:
+      hubble: .@source == "hubble"
+      kubernetes: .@source == "kubernetes"
+      kubernetes_audit: .@source == "kubernetes_audit"
+      vault: .@source == "vault"
+
+  remap_hubble_flow_logs:
+    type: remap
+    inputs:
+      - route_by_source.hubble
+    source: |
+      flow = del(.flow)
+      
+      . = merge!(., flow)
+
+      .destination.id = del(.destination.ID)
+      .destination.ip = del(.IP.destination)
+      .destination.pod = del(.destination.pod_name)
+      .destination.port = compact([.l4.TCP.destination_port, .l4.UDP.destination_port])[0]
+
+      .event_type = .event_type.type
+      .node = del(.node_name)
+      .protocol = del(.Summary)
+
+      .source.id = del(.source.ID)
+      .source.ip = del(.IP.source)
+      .source.pod = del(.source.pod_name)
+      .source.port = compact([.l4.TCP.source_port, .l4.UDP.source_port])[0]
+
+      .type = del(.Type)
+
+      del(.emitter)
+      del(.ethernet)
+      del(.interface)
+      del(.l4)
+
+  remap_kubernetes_logs:
+    type: remap
+    inputs:
+      - route_by_source.kubernetes
+    source: |
+      .kubernetes.container = del(.kubernetes.container_name)
+      .kubernetes.namespace = del(.kubernetes.pod_namespace)
+      .kubernetes.node = del(.kubernetes.pod_node_name)
+      .kubernetes.pod = del(.kubernetes.pod_name)
+
+      del(.source_type)
+
+  remap_kubernetes_audit_logs:
+    type: remap
+    inputs:
+      - route_by_source.kubernetes_audit
+    source: |
+      .api_version = del(.apiVersion)
+      .audit_id = del(.auditID)
+      .impersonated_user = del(.impersonatedUser)
+      .object_ref = del(.objectRef)
+      .request_uri = del(.requestURI)
+      .response_status = del(.responseStatus)
+      .source_ips = del(.sourceIPs)
+      .user_agent = del(.userAgent)
+
+      del(.requestReceivedTimestamp)
+      del(.stageTimestamp)
+
+  remap_vault_audit_logs:
+    type: remap
+    inputs:
+      - route_by_source.vault
+    source: |
+      del(.request.namespace)

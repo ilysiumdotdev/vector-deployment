@@ -1,0 +1,28 @@
+name: Test Vector Configuration
+
+on:
+    pull_request:
+        paths:
+            - config/**
+            - tests/**
+
+jobs:
+    test-agent:
+        runs-on: ubuntu-latest
+        container:
+            image: timberio/vector:nightly-distroless-libc
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+            
+            - name: Assemble Vector Agent Configuration
+              run: |
+                # Merge configs into a single file (Vector expects all 
+                # configs to be in the same file for tests)
+                cat config/agent/sources.yml \
+                    config/agent/transforms.yml \
+                    tests/agent/test_transforms.yml > test_agent_config.yml
+            
+            - name: Test Vector Agent Configuration
+              run: |
+                vector test test_agent_config.yml
