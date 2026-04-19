@@ -77,9 +77,10 @@ transforms:
     inputs:
       - parse_json
     route:
-      hubble: .@source == "hubble.flow"
+      hubble: .@source == "hubble_flow"
       kubernetes: .@source == "kubernetes"
-      kubernetes_audit: .@source == "kubernetes.audit"
+      kubernetes_audit: .@source == "kubernetes_audit"
+
 
   remap_hubble_flow_logs:
     type: remap
@@ -139,10 +140,3 @@ transforms:
 
       del(.requestReceivedTimestamp)
       del(.stageTimestamp)
-
-  remap_vault_audit_logs:
-    type: remap
-    inputs:
-      - route_by_source.vault
-    source: |
-      del(.request.namespace)
