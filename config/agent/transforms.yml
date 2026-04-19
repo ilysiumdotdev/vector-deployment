@@ -59,22 +59,12 @@ transforms:
       .@dataset = "kubernetes.audit"
       .@namespace = "platform"
 
-  tag_vault_audit_logs:
-    type: remap
-    inputs:
-      - vault_audit_logs
-    source: |
-      .@source = "vault_audit"
-      .@dataset = "vault.audit"
-      .@namespace = "platform"
-
   parse_json:
     type: remap
     inputs:
       - tag_hubble_flow_logs
       - tag_kubernetes_logs
       - tag_kubernetes_audit_logs
-      - tag_vault_audit_logs
     source: |
       parsed, err = parse_json(.message)
       if err == null {
@@ -90,7 +80,6 @@ transforms:
       hubble: .@source == "hubble.flow"
       kubernetes: .@source == "kubernetes"
       kubernetes_audit: .@source == "kubernetes.audit"
-      vault: .@source == "vault.audit"
 
   remap_hubble_flow_logs:
     type: remap

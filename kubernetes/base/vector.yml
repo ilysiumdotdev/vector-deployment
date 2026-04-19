@@ -51,11 +51,6 @@ spec:
         hostPath:
           path: /var/run/cilium/hubble
           type: DirectoryOrCreate
-      
-      - name: vault-audit-logs
-        hostPath:
-          path: /var/log/audit/vault
-          type: DirectoryOrCreate
 
     extraVolumeMounts:
       - name: elastic-ca
@@ -64,10 +59,6 @@ spec:
 
       - name: hubble-logs
         mountPath: /var/run/cilium/hubble
-        readOnly: true
-      
-      - name: vault-audit-logs
-        mountPath: /var/log/audit/vault
         readOnly: true
 
     env:
