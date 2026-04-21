@@ -37,11 +37,12 @@ sinks:
       namespace: "{{ .@namespace }}"
     bulk:
       action: create
-  
+
   debug:
     type: console
     inputs:
       - remap_hubble_flow_logs
       - remap_kubernetes_audit_logs
-
-
+    encoding:
+      json:
+        pretty: true
