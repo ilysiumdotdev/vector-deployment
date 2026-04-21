@@ -37,6 +37,10 @@ As mentioned, the aggregator handles the more complex processing in the pipeline
 
 The Vector aggregator is deployed as a `Deployment` on Kubernetes, meaning it can be autoscaled if necessary to handle the volume of incoming events.
 
+***
+
+![image](./docs/vector-flow-diagram.png)
+
 ### Event Stream
 
 #### Sources

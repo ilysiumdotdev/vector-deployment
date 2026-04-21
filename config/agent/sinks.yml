@@ -19,7 +19,7 @@ sinks:
     type: elasticsearch
     api_version: "v8"
     inputs:
-      # - remap_hubble_flow_logs
+      - remap_hubble_flow_logs
       - remap_kubernetes_logs
       - remap_kubernetes_audit_logs
     endpoints:
@@ -37,4 +37,11 @@ sinks:
       namespace: "{{ .@namespace }}"
     bulk:
       action: create
+  
+  debug:
+    type: console
+    inputs:
+      - remap_hubble_flow_logs
+      - remap_kubernetes_audit_logs
+
 
