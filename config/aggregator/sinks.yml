@@ -1,0 +1,37 @@
+#                                    __   __  __
+#                                    \ \ / / / /
+#                                     \ V / / /
+#                                      \_/  \/
+#
+#                                    V E C T O R
+#                                   Configuration
+#
+# ------------------------------------------------------------------------------
+# Website: https://vector.dev
+# Docs: https://vector.dev/docs
+# Chat: https://chat.vector.dev
+# ------------------------------------------------------------------------------
+
+sinks:
+  # Reference: https://vector.dev/docs/reference/configuration/sinks/elasticsearch/
+  # -------------------------------------------------------------------------------
+  elasticsearch:
+    type: elasticsearch
+    api_version: "v8"
+    inputs:
+      - parse_syslog
+    endpoints:
+      - https://elasticsearch-es-http.elastic-stack.svc:9200
+    tls:
+      ca_file: /etc/ssl/elastic/ca.crt
+    auth:
+      strategy: basic
+      user: "$${ELASTIC_USERNAME}"
+      password: "$${ELASTIC_PASSWORD}"
+    mode: data_stream
+    data_stream:
+      type: logs
+      dataset: "{{ .@dataset }}"
+      namespace: "{{ .@namespace }}"
+    bulk:
+      action: create

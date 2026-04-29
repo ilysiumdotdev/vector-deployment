@@ -26,6 +26,9 @@
 # Route - Split a stream of events into multiple sub-streams based on user-supplied conditions:
 # https://vector.dev/docs/reference/configuration/transforms/route/
 #
+# Sample - Sample events from an event stream based on supplied criteria and at a configurable rate
+# https://vector.dev/docs/reference/configuration/transforms/sample/
+# 
 # Throttle - Rate limit logs passing through a topology:
 # https://vector.dev/docs/reference/configuration/transforms/throttle/
 # ------------------------------------------------------------------------------

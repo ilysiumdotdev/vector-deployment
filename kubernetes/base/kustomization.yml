@@ -10,5 +10,10 @@ configMapGenerator:
       - ../../config/agent/sources.yml
       - ../../config/agent/transforms.yml
       - ../../config/agent/sinks.yml
+  - name: vector-aggregator-config
+    files:
+      - ../../config/aggregator/sources.yml
+      - ../../config/aggregator/transforms.yml
+      - ../../config/aggregator/sinks.yml
 generatorOptions:
   disableNameSuffixHash: true

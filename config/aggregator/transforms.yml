@@ -1,0 +1,55 @@
+#                                    __   __  __
+#                                    \ \ / / / /
+#                                     \ V / / /
+#                                      \_/  \/
+#
+#                                    V E C T O R
+#                                   Configuration
+#
+# ------------------------------------------------------------------------------
+# Website: https://vector.dev
+# Docs: https://vector.dev/docs
+# Chat: https://chat.vector.dev
+# ------------------------------------------------------------------------------
+
+# Relevant Transforms
+# ------------------------------------------------------------------------------
+# Dedupe - Deduplicate events to reduce data volume by eliminating identical events:
+# https://vector.dev/docs/reference/configuration/transforms/dedupe/
+#
+# Filter - Filter events based on a set of conditions:
+# https://vector.dev/docs/reference/configuration/transforms/filter/
+#
+# Remap - Modify observability data as it passes through the topology using Vector Remap Language (VRL):
+# https://vector.dev/docs/reference/configuration/transforms/remap/
+#
+# Route - Split a stream of events into multiple sub-streams based on user-supplied conditions:
+# https://vector.dev/docs/reference/configuration/transforms/route/
+#
+# Sample - Sample events from an event stream based on supplied criteria and at a configurable rate
+# https://vector.dev/docs/reference/configuration/transforms/sample/
+#
+# Throttle - Rate limit logs passing through a topology:
+# https://vector.dev/docs/reference/configuration/transforms/throttle/
+# ------------------------------------------------------------------------------
+
+transforms:
+  tag_unifi_logs:
+    type: remap
+    inputs:
+      - unifi_logs
+    source: |
+      .@source = "unifi"
+      .@dataset = "unifi"
+      .@namespace = "default"
+
+  parse_syslog:
+    type: remap
+    inputs:
+      - tag_unifi_logs
+    source: |
+      parsed, err = parse_syslog(.message)
+      if err == null {
+          del(.message)
+          . = merge(.,parsed)
+      }

@@ -1,0 +1,42 @@
+tests:
+  - name: test_tag_unifi_logs
+    inputs:
+      - insert_at: tag_unifi_logs
+        type: log
+        log_fields:
+          message: "{}"
+    outputs:
+      - extract_from: tag_unifi_logs
+        conditions:
+          - type: vrl
+            source: |
+              # Assert that the data stream for the logs follows 'logs-{dataset}-{namespace}'
+              expected_destination = "logs-unifi-default"
+              destination = "logs-" + string!(.@dataset) + "-" + string!(.@namespace)
+
+              assert_eq!(.@source, "unifi")
+              assert_eq!(.@dataset, "unifi")
+              assert_eq!(.@namespace, "default")
+
+              assert_eq!(destination, expected_destination)
+
+  - name: test_parse_syslog_success
+    inputs:
+      - insert_at: parse_syslog
+        type: log
+        log_fields:
+          message: "\u003c102\u003e1 2020-12-22T15:22:31.111Z vector-user.biz su 2666 ID389 - Something went wrong"
+    outputs:
+      - extract_from: parse_syslog
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.appname, "su")
+              assert_eq!(.facility, "ntp")
+              assert_eq!(.hostname, "vector-user.biz")
+              assert_eq!(.message, "Something went wrong")
+              assert_eq!(.msgid, "ID389")
+              assert_eq!(.procid, 2666)
+              assert_eq!(.severity, "info")
+              assert_eq!(.timestamp, parse_timestamp!("2020-12-22T15:22:31.111Z", format: "%Y-%m-%dT%H:%M:%S.%3fZ", timezone: "UTC"))
+              assert_eq!(.version, 1)
