@@ -110,6 +110,12 @@ spec:
       enabled: true
       type: "ClusterIP"
 
+      ports:
+        - name: syslog-udp
+          port: 514
+          protocol: UDP
+          targetPort: 514
+
     serviceAccount:
       create: true
       name: vector-agent
