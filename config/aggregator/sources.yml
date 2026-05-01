@@ -26,5 +26,5 @@ sources:
     type: syslog
     address: 0.0.0.0:514
     mode: udp
-    permit_origin:
-      - 10.20.1.0/24
+    # permit_origin:
+    #   - 10.20.1.0/24
