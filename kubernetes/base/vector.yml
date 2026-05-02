@@ -112,6 +112,11 @@ spec:
           protocol: UDP
           targetPort: 514
 
+        - name: vector-grpc
+          port: 8585
+          protocol: TCP
+          targetPort: 8585
+
     serviceAccount:
       create: true
       name: vector-aggregator
