@@ -1,36 +1,48 @@
 name: Test Vector Configuration
 
 on:
-    pull_request:
-        paths:
-            - config/**
-            - tests/**
+  pull_request:
+    paths:
+      - config/**
+      - tests/**
 
 jobs:
-    test-agent:
-        runs-on: ubuntu-latest
-        container:
-            image: timberio/vector:nightly-alpine
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@v4
-            
-            - name: Assemble Vector Configurations
-              run: |
-                # Merge configs into a single file (Vector expects all 
-                # configs to be in the same file for tests)
-                cat config/agent/sources.yml \
-                    config/agent/transforms.yml \
-                    tests/agent/test_transforms.yml > test_agent_config.yml
-                
-                cat config/aggregator/sources.yml \
-                    config/aggregator/transforms.yml \
-                    tests/aggregator/test_transforms.yml > test_aggregator_config.yml
-            
-            - name: Test Vector Agent Configuration
-              run: |
-                vector test test_agent_config.yml
+  validate-config:
+    runs-on: ubuntu-latest
+    container:
+      image: timberio/vector:nightly-alpine
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-            - name: Test Vector Aggregator Configuration
-              run: |
-                vector test test_aggregator_config.yml
+      - name: Validate Vector Configuration
+        run: |
+          mkdir /vector-data-dir
+          vector validate config/**/*.yml
+  test-config:
+    runs-on: ubuntu-latest
+    container:
+      image: timberio/vector:nightly-alpine
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Assemble Vector Configurations
+        run: |
+          # Merge configs into a single file (Vector expects all 
+          # configs to be in the same file for tests)
+          cat config/agent/sources.yml \
+              config/agent/transforms.yml \
+              tests/agent/test_transforms.yml > test_agent_config.yml
+
+          cat config/aggregator/sources.yml \
+              config/aggregator/transforms.yml \
+              tests/aggregator/test_transforms.yml > test_aggregator_config.yml
+
+      - name: Test Vector Agent Configuration
+        run: |
+          vector test test_agent_config.yml
+
+      - name: Test Vector Aggregator Configuration
+        run: |
+          vector test test_aggregator_config.yml

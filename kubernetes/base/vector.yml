@@ -43,9 +43,13 @@ spec:
       create: false
 
     extraVolumes:
-      - name: elastic-ca
+      - name: ilysium-root-ca
         configMap:
-          name: elastic-ca
+          name: ilysium-root-ca
+
+      - name: vector-agent-tls
+        secret:
+          name: vector-agent-tls-secret
 
       - name: hubble-logs
         hostPath:
@@ -53,25 +57,17 @@ spec:
           type: DirectoryOrCreate
 
     extraVolumeMounts:
-      - name: elastic-ca
-        mountPath: /etc/ssl/elastic
+      - name: ilysium-root-ca
+        mountPath: /etc/ssl/ilysium
+        readOnly: true
+
+      - name: vector-agent-tls
+        mountPath: /etc/ssl/vector
         readOnly: true
 
       - name: hubble-logs
         mountPath: /var/run/cilium/hubble
         readOnly: true
-
-    env:
-      - name: ELASTIC_USERNAME
-        valueFrom:
-          secretKeyRef:
-            name: vector-elastic-credentials
-            key: username
-      - name: ELASTIC_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: vector-elastic-credentials
-            key: password
 
     workloadResourceAnnotations:
       reloader.stakater.com/auto: "true"
@@ -128,9 +124,25 @@ spec:
         configMap:
           name: elastic-ca
 
+      - name: ilysium-root-ca
+        configMap:
+          name: ilysium-root-ca
+
+      - name: vector-aggregator-tls
+        secret:
+          name: vector-aggregator-tls-secret
+
     extraVolumeMounts:
       - name: elastic-ca
         mountPath: /etc/ssl/elastic
+        readOnly: true
+
+      - name: ilysium-root-ca
+        mountPath: /etc/ssl/ilysium
+        readOnly: true
+
+      - name: vector-aggregator-tls
+        mountPath: /etc/ssl/vector
         readOnly: true
 
     env:

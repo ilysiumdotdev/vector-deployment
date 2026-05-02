@@ -12,27 +12,6 @@
 # Chat: https://chat.vector.dev
 # ------------------------------------------------------------------------------
 
-# Relevant Transforms
-# ------------------------------------------------------------------------------
-# Dedupe - Deduplicate events to reduce data volume by eliminating identical events:
-# https://vector.dev/docs/reference/configuration/transforms/dedupe/
-#
-# Filter - Filter events based on a set of conditions:
-# https://vector.dev/docs/reference/configuration/transforms/filter/
-#
-# Remap - Modify observability data as it passes through the topology using Vector Remap Language (VRL):
-# https://vector.dev/docs/reference/configuration/transforms/remap/
-#
-# Route - Split a stream of events into multiple sub-streams based on user-supplied conditions:
-# https://vector.dev/docs/reference/configuration/transforms/route/
-#
-# Sample - Sample events from an event stream based on supplied criteria and at a configurable rate
-# https://vector.dev/docs/reference/configuration/transforms/sample/
-#
-# Throttle - Rate limit logs passing through a topology:
-# https://vector.dev/docs/reference/configuration/transforms/throttle/
-# ------------------------------------------------------------------------------
-
 transforms:
   tag_unifi_logs:
     type: remap
@@ -43,12 +22,28 @@ transforms:
       .@dataset = "unifi"
       .@namespace = "default"
 
+  parse_json:
+    type: remap
+    inputs:
+      - vector_agent_logs
+    source: |
+
+      if is_string(.host) {
+        .host = { "name": .host }
+      }
+
+      parsed, err = parse_json(.message)
+      if err == null {
+          . = merge!(., parsed)
+          del(.message)
+      }
+
   parse_syslog:
     type: remap
     inputs:
       - tag_unifi_logs
     source: |
-    
+
       if is_string(.host) {
         .host = {"name": .host}
       }
@@ -58,3 +53,105 @@ transforms:
           del(.message)
           . = merge(.,parsed)
       }
+
+  route_logs:
+    type: route
+    inputs:
+      - parse_json
+      - parse_syslog
+    route:
+      envoy_access_logs:
+        type: vrl
+        source: .@dataset == "kubernetes.envoy"
+      hubble_flow_logs:
+        type: vrl
+        source: .@source == "hubble_flow"
+      kubernetes_logs:
+        type: vrl
+        source: .@source == "kubernetes"
+      kubernetes_audit_logs:
+        type: vrl
+        source: .@source == "kubernetes_audit"
+      unifi_logs:
+        type: vrl
+        source: .@source == "unifi"
+      vault_audit_logs:
+        type: vrl
+        source: '.@dataset == "kubernetes.vault" && (!is_null(.auth.accessor) || .@module == "expiration")'
+
+  remap_envoy_access_logs:
+    type: remap
+    inputs:
+      - route_logs.envoy_access_logs
+    source: |
+      .@dataset = "envoy.access"
+
+  remap_hubble_flow_logs:
+    type: remap
+    inputs:
+      - route_logs.hubble_flow_logs
+    source: |
+
+      if exists(.flow) {
+        flow = del(.flow)
+        . = merge!(., flow)
+
+        .destination.id = del(.destination.ID)
+        .destination.ip = del(.IP.destination)
+        .destination.pod = del(.destination.pod_name)
+        .destination.port = compact([.l4.TCP.destination_port, .l4.UDP.destination_port])[0]
+
+        .event_type = .event_type.type
+        .node = del(.node_name)
+        .summary = del(.Summary)
+
+        .source.id = del(.source.ID)
+        .source.ip = del(.IP.source)
+        .source.pod = del(.source.pod_name)
+        .source.port = compact([.l4.TCP.source_port, .l4.UDP.source_port])[0]
+
+        .type = del(.Type)
+
+        del(.emitter)
+        del(.ethernet)
+        del(.host)
+        del(.interface)
+        del(.IP)
+        del(.l4)
+      }
+
+  remap_kubernetes_logs:
+    type: remap
+    inputs:
+      - route_logs.kubernetes_logs
+    source: |
+      .kubernetes.container = del(.kubernetes.container_name)
+      .kubernetes.namespace = del(.kubernetes.pod_namespace)
+      .kubernetes.node = del(.kubernetes.pod_node_name)
+      .kubernetes.pod = del(.kubernetes.pod_name)
+
+      del(.source_type)
+
+  remap_kubernetes_audit_logs:
+    type: remap
+    inputs:
+      - route_logs.kubernetes_audit_logs
+    source: |
+      .api_version = del(.apiVersion)
+      .audit_id = del(.auditID)
+      .impersonated_user = del(.impersonatedUser)
+      .object_ref = del(.objectRef)
+      .request_uri = del(.requestURI)
+      .response_status = del(.responseStatus)
+      .source_ips = del(.sourceIPs)
+      .user_agent = del(.userAgent)
+
+      del(.requestReceivedTimestamp)
+      del(.stageTimestamp)
+
+  remap_vault_audit_logs:
+    type: remap
+    inputs:
+      - route_logs.vault_audit_logs
+    source: |
+      .@dataset = "vault.audit"

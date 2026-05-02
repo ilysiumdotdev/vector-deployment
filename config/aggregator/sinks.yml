@@ -13,13 +13,17 @@
 # ------------------------------------------------------------------------------
 
 sinks:
-  # Reference: https://vector.dev/docs/reference/configuration/sinks/elasticsearch/
-  # -------------------------------------------------------------------------------
-  elasticsearch:
+  elasticsearch_logs:
     type: elasticsearch
     api_version: "v8"
     inputs:
-      - parse_syslog
+      - remap_envoy_access_logs
+      - remap_hubble_flow_logs
+      - remap_kubernetes_logs
+      - remap_kubernetes_audit_logs
+      - remap_vault_audit_logs
+      - route_logs.unifi_logs
+      - route_logs._unmatched
     endpoints:
       - https://elasticsearch-es-http.elastic-stack.svc:9200
     tls:
