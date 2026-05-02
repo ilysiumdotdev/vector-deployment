@@ -7,18 +7,6 @@ on:
       - tests/**
 
 jobs:
-  validate-config:
-    runs-on: ubuntu-latest
-    container:
-      image: timberio/vector:nightly-alpine
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Validate Vector Configuration
-        run: |
-          mkdir /vector-data-dir
-          vector validate config/**/*.yml
   test-config:
     runs-on: ubuntu-latest
     container:

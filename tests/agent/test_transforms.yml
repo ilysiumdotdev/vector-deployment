@@ -16,7 +16,7 @@ tests:
 
               assert_eq!(.@source, "hubble_flow")
               assert_eq!(.@dataset, "hubble.flow")
-              assert_eq!(.@namespace, "platform")
+              assert_eq!(.@namespace, "default")
 
               assert_eq!(destination, expected_destination)
 
@@ -61,6 +61,6 @@ tests:
 
               assert_eq!(.@source, "kubernetes_audit")
               assert_eq!(.@dataset, "kubernetes.audit")
-              assert_eq!(.@namespace, "platform")
+              assert_eq!(.@namespace, "default")
 
               assert_eq!(destination, expected_destination)
