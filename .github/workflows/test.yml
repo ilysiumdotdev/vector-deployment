@@ -22,6 +22,4 @@ jobs:
 
       - name: Test Vector Configuration
         run: |
-          vector test \
-            config/**/*.yml \
-            tests/**/*.yml
+          vector test config/**/*.yml tests/**/*.yml
