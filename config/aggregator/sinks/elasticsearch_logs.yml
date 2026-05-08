@@ -4,7 +4,7 @@ sinks:
     api_version: "v8"
     inputs:
       - transform_envoy_access_logs
-      - transform_hubble_flow_logs
+      # - transform_hubble_flow_logs
       - transform_kubernetes_logs
       - transform_kubernetes_audit_logs
       - transform_vault_audit_logs
