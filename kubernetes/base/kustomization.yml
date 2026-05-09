@@ -7,27 +7,42 @@ resources:
   - certificates.yml
   - vector.yml
 configMapGenerator:
+  ### Vector Agent Configuration ###
   - name: vector-agent-base
     files:
       - ../../config/agent/vector.yml
   - name: vector-agent-sources
     files:
-      - ../../config/agent/sources/*.yml
+      - ../../config/agent/sources/hubble_flow_logs.yml
+      - ../../config/agent/sources/kubernetes_audit_logs.yml
+      - ../../config/agent/sources/kubernetes_logs.yml
   - name: vector-agent-transforms
     files:
-      - ../../config/agent/transforms/*.yml
+      - ../../config/agent/transforms/tag_hubble_flow_logs.yml
+      - ../../config/agent/transforms/tag_kubernetes_audit_logs.yml
+      - ../../config/agent/transforms/tag_kubernetes_logs.yml
   - name: vector-agent-sinks
     files:
-      - ../../config/agent/sinks/*.yml
+      - ../../config/agent/sinks/vector_aggregator.yml
+  ### Vector Aggregator Configuration ###
   - name: vector-aggregator-base
     files:
       - ../../config/aggregator/vector.yml
   - name: vector-aggregator-sources
     files:
-      - ../../config/aggregator/sources/*.yml
+      - ../../config/aggregator/sources/unifi_logs.yml
+      - ../../config/aggregator/sources/vector_agent.yml
   - name: vector-aggregator-transforms
     files:
-      - ../../config/aggregator/transforms/*.yml
+      - ../../config/aggregator/transforms/parse_json.yml
+      - ../../config/aggregator/transforms/parse_syslog.yml
+      - ../../config/aggregator/transforms/route_logs.yml
+      - ../../config/aggregator/transforms/tag_unifi_logs.yml
+      - ../../config/aggregator/transforms/transform_envoy_access_logs.yml
+      - ../../config/aggregator/transforms/transform_hubble_flow_logs.yml
+      - ../../config/aggregator/transforms/transform_kubernetes_audit_logs.yml
+      - ../../config/aggregator/transforms/transform_kubernetes_logs.yml
+      - ../../config/aggregator/transforms/transform_vault_audit_logs.yml
   - name: vector-aggregator-sinks
     files:
       - ../../config/aggregator/sinks/elasticsearch_logs.yml
